@@ -5,5 +5,4 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("reorder_args")
 
-# Include sub-projects.
-add_subdirectory ("reorder_args")
+add_executable (reorderargs "test/reorder_args.cpp" "include/reorder_args.hpp")
