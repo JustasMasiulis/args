@@ -185,6 +185,19 @@ namespace args {
     } // namespace detail
 
 
+    /// \brief Reorders function arguments.
+    /// \tparam ArgIndices New order of parameters by their index.
+    /// \param function The function whose arguments will be reordered.
+    /// \returns Returns an object which will take the reordered arguments and pass them
+    ///          down to the original function.
+    /// \note Function object is saved by value. Use std::ref to avoid copies.
+    /// \code{.cpp}
+    /// void foo(int, float, void*);
+    /// // produces a callable whose signature would be void(void*, float,int).
+    /// auto reordered = args::reorder<3, 2, 1>(foo);
+    /// // calls foo(1, 2.f, nullptr);
+    /// reordered(nullptr, 2.f, 1);
+    /// \endcode
     template<std::size_t... ArgIndices, class Fn>
     inline constexpr detail::reorderer<std::decay_t<Fn>, ArgIndices...>
     reorder(Fn&& function)
@@ -192,10 +205,31 @@ namespace args {
         return { std::forward<Fn>(function) };
     }
 
+    /// \brief Binds / partially applies function arguments.
+    /// \tparam ArgIndices Indices of arguments whose values will be bound.
+    /// \param function The function whose arguments will be bound.
+    /// \param values The values that will be bound to function arguments at given
+    ///               indices.
+    /// \returns Returns an object which will take the non bound arguments and
+    ///          pass them, together with the bound arguments down to the original
+    ///          function.
+    /// \note Function object and bound arguments are saved by value. Use std::ref to
+    ///       avoid copies.
+    /// \code{.cpp}
+    /// void foo(int, float, void*);
+    /// // produces a callable whose signature would be void(float).
+    /// auto bound = args::bind<2, 0>(foo, nullptr, 1);
+    /// // calls foo(1, 2.f, nullptr);
+    /// bound(2.f);
+    /// \endcode
     template<std::size_t... ArgIndices, class Fn, class... Ts>
     inline constexpr detail::binder<std::decay_t<Fn>, std::tuple<Ts...>, ArgIndices...>
     bind(Fn&& function, Ts&&... values)
     {
+        static_assert(
+            sizeof...(ArgIndices) == sizeof...(Ts),
+            "you must provide the same number of values to bind and argument indices");
+
         return { std::forward<Fn>(function), std::forward<Ts>(values)... };
     }
 
