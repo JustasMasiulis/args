@@ -182,6 +182,23 @@ namespace args {
             }
         };
 
+        template<class Fn, std::size_t... ArgIndices>
+        class curryer {
+            Fn _fn;
+
+        public:
+            template<class Function>
+            inline constexpr curryer(Function&& fn) : _fn(std::forward<Function>(fn))
+            {}
+
+            template<class... Args>
+            inline decltype(auto) operator()(Args&&... args)
+            {
+                return binder<Fn, std::tuple<Args...>, ArgIndices...>(
+                    _fn, std::forward<Args>(args)...);
+            }
+        };
+
     } // namespace detail
 
 
@@ -231,6 +248,28 @@ namespace args {
             "you must provide the same number of values to bind and argument indices");
 
         return { std::forward<Fn>(function), std::forward<Ts>(values)... };
+    }
+
+    /// \brief Curries functions arguments.
+    /// \tparam ArgIndices Indices of arguments which will be curried.
+    /// \param function The function whose arguments will be curried.
+    /// \returns Returns a callable which will return another callable which will have
+    ///          the selected arguments bound.
+    /// \note Function object and bound arguments are saved by value. Use std::ref to
+    ///       avoid copies.
+    /// \code{.cpp}
+    /// void foo(int, float, void*);
+    /// // produces a callable whose signature would be void(float) (void*, int).
+    /// auto curried = args::curry<2, 0>(foo);
+    /// // produces a callable whose signature would be void(float)
+    /// auto bound = curried(nullptr, 1);
+    /// // calls foo(1, 2.f, nullptr);
+    /// bound(2.f);
+    /// \endcode
+    template<std::size_t... ArgIndices, class Fn>
+    inline constexpr detail::curryer<std::decay_t<Fn>, ArgIndices...> curry(Fn&& function)
+    {
+        return { std::forward<Fn>(function) };
     }
 
 } // namespace args
