@@ -3,30 +3,89 @@
 
 #include "../include/reorder_args.hpp"
 #include <iostream>
+#include <cassert>
 
-void fn(int a, float b, void* c) { std::cout << a << b << c; }
-auto fn2 = [](int a, float b, void* c) { std::cout << a << b << c; };
-auto fn3 = [ fn = fn2, ofn = fn ](auto&&... args) { return (fn(args...), ofn(args...)); };
+void fn(int a, float b, void* c) { assert(a == 1 && b == 2.f && c == nullptr); }
+auto fn2 = [](int a, float b, void* c) { assert(a == 1 && b == 2.f && c == nullptr); };
+auto fn3 = [mfn = fn2](auto&&... args) { return fn(args...); };
 
 
 int main()
 {
-    auto reordered1 = jm::reorder_args<2, 1, 0>(fn);
-    // should be the size of a function pointer
-    static_assert(sizeof(reordered1) == sizeof(void*), "invalid size");
-    reordered1(nullptr, 2.f, 1);
+    args::reorder<0, 1, 2>(fn)(1, 2.f, nullptr);
+    args::reorder<0, 2, 1>(fn)(1, nullptr, 2.f);
+    args::reorder<1, 0, 2>(fn)(2.f, 1, nullptr);
+    args::reorder<1, 2, 0>(fn)(2.f, nullptr, 1);
+    args::reorder<2, 0, 1>(fn)(nullptr, 1, 2.f);
+    args::reorder<2, 1, 0>(fn)(nullptr, 2.f, 1);
+
+    args::reorder<0, 1, 2>(fn2)(1, 2.f, nullptr);
+    args::reorder<0, 2, 1>(fn2)(1, nullptr, 2.f);
+    args::reorder<1, 0, 2>(fn2)(2.f, 1, nullptr);
+    args::reorder<1, 2, 0>(fn2)(2.f, nullptr, 1);
+    args::reorder<2, 0, 1>(fn2)(nullptr, 1, 2.f);
+    args::reorder<2, 1, 0>(fn2)(nullptr, 2.f, 1);
+
+    args::reorder<0, 1, 2>(fn3)(1, 2.f, nullptr);
+    args::reorder<0, 2, 1>(fn3)(1, nullptr, 2.f);
+    args::reorder<1, 0, 2>(fn3)(2.f, 1, nullptr);
+    args::reorder<1, 2, 0>(fn3)(2.f, nullptr, 1);
+    args::reorder<2, 0, 1>(fn3)(nullptr, 1, 2.f);
+    args::reorder<2, 1, 0>(fn3)(nullptr, 2.f, 1);
+
+    args::bind<0>(fn, 1)(2.f, nullptr);
+    args::bind<1>(fn, 2.f)(1, nullptr);
+    args::bind<2>(fn, nullptr)(1, 2.f);
+
+    args::bind<0, 1>(fn, 1, 2.f)(nullptr);
+    args::bind<0, 2>(fn, 1, nullptr)(2.f);
+    args::bind<1, 0>(fn, 2.f, 1)(nullptr);
+    args::bind<1, 2>(fn, 2.f, nullptr)(1);
+    args::bind<2, 0>(fn, nullptr, 1)(2.f);
+    args::bind<2, 1>(fn, nullptr, 2.f)(1);
+
+    args::bind<0, 1, 2>(fn, 1, 2.f, nullptr)();
+    args::bind<0, 2, 1>(fn, 1, nullptr, 2.f)();
+    args::bind<1, 0, 2>(fn, 2.f, 1, nullptr)();
+    args::bind<1, 2, 0>(fn, 2.f, nullptr, 1)();
+    args::bind<2, 0, 1>(fn, nullptr, 1, 2.f)();
+    args::bind<2, 1, 0>(fn, nullptr, 2.f, 1)();
 
 
-    auto reordered2 = jm::reorder_args<2, 1, 0>(fn2);
-    std::cout << '\n' << sizeof(reordered2) << ' ' << sizeof(fn2) << '\n';
-    static_assert(sizeof(reordered2) == sizeof(fn2), "invalid size");
-    reordered2(nullptr, 2.f, 1);
+    args::bind<0>(fn2, 1)(2.f, nullptr);
+    args::bind<1>(fn2, 2.f)(1, nullptr);
+    args::bind<2>(fn2, nullptr)(1, 2.f);
 
-    auto reordered3 = jm::reorder_args<2, 1, 0>(fn3);
-    static_assert(sizeof(reordered3) == sizeof(fn3), "invalid size");
-    reordered3(nullptr, 2.f, 1);
+    args::bind<0, 1>(fn2, 1, 2.f)(nullptr);
+    args::bind<0, 2>(fn2, 1, nullptr)(2.f);
+    args::bind<1, 0>(fn2, 2.f, 1)(nullptr);
+    args::bind<1, 2>(fn2, 2.f, nullptr)(1);
+    args::bind<2, 0>(fn2, nullptr, 1)(2.f);
+    args::bind<2, 1>(fn2, nullptr, 2.f)(1);
 
-	auto reordered4 = jm::reorder_args<2, 1, 0>(std::ref(fn3));
-    static_assert(sizeof(reordered4) == sizeof(void*), "invalid size");
-    reordered4(nullptr, 2.f, 1);
+    args::bind<0, 1, 2>(fn2, 1, 2.f, nullptr)();
+    args::bind<0, 2, 1>(fn2, 1, nullptr, 2.f)();
+    args::bind<1, 0, 2>(fn2, 2.f, 1, nullptr)();
+    args::bind<1, 2, 0>(fn2, 2.f, nullptr, 1)();
+    args::bind<2, 0, 1>(fn2, nullptr, 1, 2.f)();
+    args::bind<2, 1, 0>(fn2, nullptr, 2.f, 1)();
+
+
+    args::bind<0>(fn3, 1)(2.f, nullptr);
+    args::bind<1>(fn3, 2.f)(1, nullptr);
+    args::bind<2>(fn3, nullptr)(1, 2.f);
+
+    args::bind<0, 1>(fn3, 1, 2.f)(nullptr);
+    args::bind<0, 2>(fn3, 1, nullptr)(2.f);
+    args::bind<1, 0>(fn3, 2.f, 1)(nullptr);
+    args::bind<1, 2>(fn3, 2.f, nullptr)(1);
+    args::bind<2, 0>(fn3, nullptr, 1)(2.f);
+    args::bind<2, 1>(fn3, nullptr, 2.f)(1);
+
+    args::bind<0, 1, 2>(fn3, 1, 2.f, nullptr)();
+    args::bind<0, 2, 1>(fn3, 1, nullptr, 2.f)();
+    args::bind<1, 0, 2>(fn3, 2.f, 1, nullptr)();
+    args::bind<1, 2, 0>(fn3, 2.f, nullptr, 1)();
+    args::bind<2, 0, 1>(fn3, nullptr, 1, 2.f)();
+    args::bind<2, 1, 0>(fn3, nullptr, 2.f, 1)();
 }
