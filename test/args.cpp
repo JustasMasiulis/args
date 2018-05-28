@@ -1,15 +1,12 @@
-﻿// reorder_args.cpp : Defines the entry point for the application.
-//
-
-#include "../include/reorder_args.hpp"
+﻿#include "../include/args.hpp"
 #include <iostream>
 #include <cassert>
 
-void fn(int a, float b, void* c) { assert(a == 1 && b == 2.f && c == nullptr); }
-auto fn2 = [](int a, float b, void* c) { assert(a == 1 && b == 2.f && c == nullptr); };
-auto fn3 = [mfn = fn2](auto&&... args) { return fn(args...); };
+inline void fn(int a, float b, void* c) { assert(a == 1 && b == 2.f && c == nullptr); }
+const auto  fn2 = [](int a, float b, void* c) { fn(a, b, c); };
+const auto  fn3 = [mfn = fn2](auto&&... args) { return fn(args...); };
 
-void reorder()
+inline void reorder()
 {
     args::reorder<0, 1, 2>(fn)(1, 2.f, nullptr);
     args::reorder<0, 2, 1>(fn)(1, nullptr, 2.f);
@@ -33,7 +30,7 @@ void reorder()
     args::reorder<2, 1, 0>(fn3)(nullptr, 2.f, 1);
 }
 
-void bind()
+inline void bind()
 {
     args::bind<0>(fn, 1)(2.f, nullptr);
     args::bind<1>(fn, 2.f)(1, nullptr);
@@ -92,7 +89,7 @@ void bind()
     args::bind<2, 1, 0>(fn3, nullptr, 2.f, 1)();
 }
 
-void curry()
+inline void curry()
 {
     args::curry<0>(fn)(1)(2.f, nullptr);
     args::curry<1>(fn)(2.f)(1, nullptr);
@@ -132,7 +129,7 @@ void curry()
     args::curry<2, 1, 0>(fn2)(nullptr, 2.f, 1)();
 
 
-	args::curry<0>(fn3)(1)(2.f, nullptr);
+    args::curry<0>(fn3)(1)(2.f, nullptr);
     args::curry<1>(fn3)(2.f)(1, nullptr);
     args::curry<2>(fn3)(nullptr)(1, 2.f);
 
@@ -153,6 +150,7 @@ void curry()
 
 int main()
 {
+    args::bind(fn);
     reorder();
     bind();
     curry();

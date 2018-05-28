@@ -1,8 +1,4 @@
-﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
-#
-cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.8)
+project ("args")
 
-project ("reorder_args")
-
-add_executable (reorderargs "test/reorder_args.cpp" "include/reorder_args.hpp")
+add_executable (args "test/args.cpp" "include/args.hpp")

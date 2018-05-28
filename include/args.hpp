@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef JM_REORDER_ARGUMENTS_HPP
-#define JM_REORDER_ARGUMENTS_HPP
+#ifndef JM_ARGS_HPP
+#define JM_ARGS_HPP
 
-#include <tuple>
-#include <utility>
 #include <type_traits>
+#include <utility>
+#include <tuple>
 
 namespace args {
 
@@ -200,7 +200,6 @@ namespace args {
         };
 
     } // namespace detail
-
 
     /// \brief Reorders function arguments.
     /// \tparam ArgIndices New order of parameters by their index.
